@@ -21,7 +21,7 @@ models = {}
 
 # Define the model download URLs (replace with your actual links)
 MODEL_URLS = {
-    'DenseNet169': 'https://drive.google.com/uc?export=download&id=Y1cuMNlSPYB65f9qHtXFgSMbpdBI6csn6C',
+    'DenseNet169': 'https://drive.google.com/uc?export=download&id=1cuMNlSPYB65f9qHtXFgSMbpdBI6csn6C',
     'ResNet101': 'https://drive.google.com/uc?export=download&id=1Se_4jG8wS5FMGTrC5DXF0K2pT0P4hJrT',
     'XceptionNet': 'https://drive.google.com/uc?export=download&id=1fwi4WWgZvZBkXDLRSFhYL5QHgcT_aYFZ',
 }
@@ -100,11 +100,15 @@ def preprocess():
     try:
         img_array, original_img = preprocess_image(filepath)
         filtered_img = apply_filters(original_img)
-        filtered_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'filtered_' + filename)
+        filtered_image_filename = 'filtered_' + filename
+        filtered_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filtered_image_filename)
         cv2.imwrite(filtered_image_path, filtered_img)
+
+        # Make sure to return the URL path
+        filtered_image_url = f"/static/output/{filtered_image_filename}"
         return jsonify({
             "original_image": filepath,
-            "preprocessed_image": filtered_image_path
+            "preprocessed_image": filtered_image_url  # Use the URL path
         })
     except Exception as e:
         return jsonify({"error": f"Error during preprocessing: {str(e)}"}), 500
