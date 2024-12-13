@@ -8,7 +8,7 @@ gunicorn==23.0.0
 tensorflow-cpu
 keras==3.7.0
 numpy==1.23.5
-opencv-python==4.7.0.72
+opencv-python-headless==4.7.0.72
 h5py==3.12.1
 
 # Utility libraries
