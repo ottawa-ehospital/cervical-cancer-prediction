@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for
 import os
 import numpy as np
 import cv2
@@ -12,9 +12,13 @@ from flask_cors import CORS
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
-# Configure upload folder
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/output')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Configure upload folders
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+OUTPUT_FOLDER = os.path.join(app.root_path, 'static', 'output')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Initialize a dictionary to hold models
 models = {}
@@ -94,21 +98,28 @@ def preprocess():
     file = request.files.get("file")
     if not file:
         return jsonify({"error": "No image file uploaded."}), 400
+
     filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
+
     try:
         img_array, original_img = preprocess_image(filepath)
         filtered_img = apply_filters(original_img)
-        filtered_image_filename = 'filtered_' + filename
-        filtered_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filtered_image_filename)
+
+        # Save the preprocessed image
+        filtered_image_filename = f'preprocessed_{filename}'
+        filtered_image_path = os.path.join(OUTPUT_FOLDER, filtered_image_filename)
         cv2.imwrite(filtered_image_path, filtered_img)
 
-        # Make sure to return the URL path
-        filtered_image_url = f"/static/output/{filtered_image_filename}"
+        # Generate URLs for images
+        original_image_url = url_for('static', filename=f'uploads/{filename}', _external=True)
+        filtered_image_url = url_for('static', filename=f'output/{filtered_image_filename}', _external=True)
+
         return jsonify({
-            "original_image": filepath,
-            "preprocessed_image": filtered_image_url  # Use the URL path
+            "original_image": original_image_url,
+            "preprocessed_image": filtered_image_url,
+            "message": "Images processed successfully."
         })
     except Exception as e:
         return jsonify({"error": f"Error during preprocessing: {str(e)}"}), 500
@@ -122,20 +133,23 @@ def predict():
         return jsonify({"error": f"Model '{model_name}' not found."}), 400
     if not file:
         return jsonify({"error": "No image file uploaded."}), 400
+
     filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
+
     try:
         img_array, original_img = preprocess_image(filepath)
-        filtered_img = apply_filters(original_img)
         class_index = predict_cancer_type(models[model_name], img_array)
         class_name, is_cancerous = determine_cancerous(class_index)
+
         risk = "High" if is_cancerous else "Low"
         recommendation = (
             "Schedule a screening and consult a healthcare provider."
             if is_cancerous else
             "Maintain regular check-ups and a healthy lifestyle."
         )
+
         return jsonify({
             "class_name": class_name,
             "is_cancerous": is_cancerous,
@@ -147,4 +161,4 @@ def predict():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=False)
