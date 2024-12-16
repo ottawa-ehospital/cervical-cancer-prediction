@@ -26,8 +26,8 @@ models = {}
 # Define the model download URLs (replace with your actual links)
 MODEL_URLS = {
     'DenseNet169': 'https://drive.google.com/uc?export=download&id=1cuMNlSPYB65f9qHtXFgSMbpdBI6csn6C',
-    'ResNet101': 'https://drive.google.com/uc?export=download&id=1Se_4jG8wS5FMGTrC5DXF0K2pT0P4hJrT',
-    'XceptionNet': 'https://drive.google.com/uc?export=download&id=1fwi4WWgZvZBkXDLRSFhYL5QHgcT_aYFZ',
+    #'ResNet101': 'https://drive.google.com/uc?export=download&id=1Se_4jG8wS5FMGTrC5DXF0K2pT0P4hJrT',
+    #'XceptionNet': 'https://drive.google.com/uc?export=download&id=1fwi4WWgZvZBkXDLRSFhYL5QHgcT_aYFZ',
 }
 
 def download_model_from_google_drive(url, output):
